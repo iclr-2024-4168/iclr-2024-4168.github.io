@@ -1,0 +1,70 @@
+from articulate_anything.api.odio_urdf import *
+
+
+def partnet_102698(intput_dir, links):
+    """
+    No. masked_links: 4
+    Robot Link Summary:
+    - base
+    - lever
+    - seat
+    - toilet_body
+
+    """
+    pred_robot = Robot(input_dir=intput_dir, name="toilet")
+    pred_robot.add_link(links['base'])
+    pred_robot.add_link(links['toilet_body'])
+    pred_robot.add_joint(Joint("base_to_toilet_body",
+                         Parent("base"),
+                         Child("toilet_body"),
+                         type="fixed"),
+    )
+
+    ## =============================================
+    ## partnet mobility peculiarity: need to always call this function
+    ## after the first joint to orientate the robot correctly
+    pred_robot.align_robot_orientation()
+    ## =============================================
+
+    # seat goes on top of the toilet body. No clearance or further adjustment needed
+    pred_robot.add_link(links['seat'])
+    pred_robot.place_relative_to('seat', 'toilet_body',
+                                    placement="above",
+                                    clearance=0.0)
+    # ========================================================
+    
+    pred_robot.add_link(links['lever'])
+    pred_robot.place_relative_to('lever', 'toilet_body',
+                                    placement="left",
+                                    clearance=0.0)
+    # ====================JOINT PREDICTION====================
+    ## -- Groundtruth video analysis --
+    # joint_type: 'revolute', the seat opens by rotating in an arc
+    # joint_axis: the seat rotates along the y-axis
+    # joint_origin: the seat is attached to the body at the back and bottom of the seat. Bottom is optional
+    # but BACK is a must.
+    # so pivot point needs to either be Back-Left-Bottom (BLB) or Back-Right-Bottom (BRB)
+    # joint_limit: the seat opens upward
+    seat_bb = pred_robot.get_bounding_boxes(["seat"], include_dim=False)["seat"]
+    seat_vertices = compute_aabb_vertices(*seat_bb)
+    pivot_point = seat_vertices[0]  # Back-Left-Bottom (BLB)
+
+    pred_robot.make_revolute_joint(
+        "seat",
+        "toilet_body",
+        global_axis=[
+            0,
+        ### pivot-axis relationship:
+        ### In our convention, **back** is negative and **front** is positive, 
+        ### and our pivot point is back so set axis to negative
+        ### for the seat to open upward
+            -1,
+            0,
+        ],  # the lid of the treasure chest opens up and down so rotates along the left-right axis,
+        # which is the y-axis
+        lower_angle_deg=0,
+        upper_angle_deg=90,
+        pivot_point=pivot_point,
+    )
+
+    return pred_robot

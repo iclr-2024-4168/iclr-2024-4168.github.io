@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+    content="Deformable Neural Radiance Fields creates free-viewpoint portraits (nerfies) from casually captured videos.">
+  <meta name="keywords" content="Nerfies, D-NeRF, NeRF">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>articulate-anything</title>
+
+  <!-- Global site tag (gtag.js) - Google Analytics. TODO: get the analytics -->
+  <!-- <script async src="https://www.googletagmanager.com/gtag/js?id=G-PYVRSFMDRL"></script> -->
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    function gtag() {
+      dataLayer.push(arguments);
+    }
+
+    gtag('js', new Date());
+
+    gtag('config', 'G-PYVRSFMDRL');
+  </script>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro" rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+  <script src="./static/js/index.js"></script>
+
+
+  <!-- code highlight -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+
+  <style>
+    .demo-container {
+      display: flex;
+      flex-wrap: nowrap;
+      /* Changed from wrap to nowrap */
+      align-items: flex-start;
+      /* Align items to the top */
+    }
+
+    .demo-gallery {
+      flex: 0 0 50%;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+      gap: 0px;
+    }
+
+    .demo-gallery img {
+      /* change this to  affect no. of images per row.
+      For example, 25% - 4px means 100/25 = 4 images per row */
+      width: calc(25% - 4px);
+      height: auto;
+      object-fit: cover;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .demo-preview {
+      flex: 0 0 50%;
+      padding-left: 5px;
+      position: sticky;
+      top: 20px;
+      /* Adjust as needed */
+    }
+
+    #demo-video-1 {
+      width: 100%;
+      height: 300px;
+      max-width: 400px;
+      object-fit: contain;
+      border-radius: 5px;
+    }
+
+    #imgtext-1 {
+      margin-top: 10px;
+      font-size: 1.2em;
+      font-weight: bold;
+    }
+
+    .code-container {
+      position: relative;
+      max-height: 400px;
+      /* Adjust based on your layout */
+      overflow-y: auto;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+      flex-grow: 1;
+      width: 100%;
+      max-width: none;
+    }
+
+    .code-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .code-container::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    .code-container::-webkit-scrollbar-thumb {
+      background: #888;
+    }
+
+    .code-container::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+
+    pre {
+      margin: 0;
+      padding: 0;
+    }
+
+    code {
+      font-size: 14px;
+      line-height: 1.4;
+      padding: 5px;
+      display: block;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    code {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .image-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 20px;
+    }
+
+    .image-item {
+      flex: 1 1 300px;
+      max-width: 100%;
+      text-align: center;
+    }
+
+    .image-item img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .subtitle {
+      font-size: 2rem;
+      margin-top: 0.5rem;
+      /* Adjust this value to control the space between title and subtitle */
+      display: block;
+      /* Ensures the subtitle is on a new line */
+      width: 100%;
+      /* Makes sure it takes full width */
+    }
+
+    .video-container {
+      position: relative;
+      width: 100%;
+      padding-bottom: 48%;
+      /* padding-bottom: 42.25%; */
+      /* 16:9 aspect ratio */
+      margin: 0 auto;
+    }
+
+    #replay-video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #demo-video {
+      padding-top: 0rem;
+      padding-bottom: 2rem;
+    }
+
+    .hero-body {
+      padding-bottom: 0rem;
+    }
+
+    .section {
+      padding-top: 2rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">
+              <span class="logo"></span>
+              <span class="small-caps">articulate-anything</span>
+              <span class="subtitle">Automatic Modeling of Articulated Objects via Vision-Language Foundation
+                Model</span>
+            </h1>
+            <!-- <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <a href="https://vlongle.github.io">Long Le</a></span>
+              <a href="mailto:vlongle@seas.upenn.edu">
+                <span class="icon">
+                  <i class="fa fa-envelope"></i>
+                </span>
+              </a>,
+              <span class="author-block">
+                <a href="https://www.jchunx.dev/">Jason Xie</a>,</span>
+              <span class="author-block">
+                <a href="https://yueyang1996.github.io/">Yue Yang</a>,
+              </span>
+              <span class="author-block">
+                <a href="https://jasonma2016.github.io/">Jason Ma</a>,
+              </span> <br>
+              <span class="author-block">
+                <a href="https://vedder.io/">Kyle Vedder</a>,
+              </span>
+              <span class="author-block">
+                <a href="https://arjun-krishna.github.io/">Arjun Krishna</a>,
+              </span>
+              <span class="author-block">
+                <a href="https://www.seas.upenn.edu/~dineshj/">Dinesh Jayaraman</a>,
+              </span>
+              <span class="author-block">
+                <a href="https://www.seas.upenn.edu/~eeaton/">Eric Eaton</a>
+              </span>
+            </div>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">University of Pennsylvania</span>
+            </div>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <span class="icon">
+                  <i class="fa fa-envelope"></i>
+                </span>
+                Corresponding author: vlongle@seas.upenn.edu
+              </span>
+            </div>
+            <div class="column has-text-centered">
+              <div class="publication-links">
+            <span class="link-block">
+              <a target="_blank" href="https://arxiv.org/abs/2310.12931"
+                class="external-link button is-normal is-rounded is-dark">
+                <span class="icon">
+                  <i class="ai ai-arxiv"></i>
+                </span>
+                <span>arXiv</span>
+              </a>
+            </span>
+            <span class="link-block">
+              <a target="_blank" href="assets/eureka_paper.pdf"
+                class="external-link button is-normal is-rounded is-dark">
+                <span class="icon">
+                  <i class="fas fa-file-pdf"></i>
+                </span>
+                <span>PDF</span>
+              </a>
+              <a target="_blank" href="https://articulate-anything.github.io/"
+                class="external-link button is-normal is-rounded is-dark">
+                <span class="icon">
+                  <i class="fab fa-github"></i>
+                </span>
+                <span>Code</span>
+              </a>
+            </span> -->
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+    </div>
+  </section>
+
+  <section class="section" id="demo-video">
+    <div class="container is-max-desktop">
+      <div class="content has-text-centered">
+        <div class="video-container">
+          <video id="replay-video" controls preload playsinline autoplay loop>
+            <source src="videos/articulate_anything_tiktokified.mp4" type="video/mp4">
+          </video>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <!-- Abstract. -->
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              Interactive 3D simulated objects are crucial in AR/VR, animations, and robotics, serving as the
+              foundational elements that drive immersive experiences and advanced automation.
+              However, articulating these objects requires extensive human effort and expertise, limiting their
+              broader
+              applications.
+              To overcome this challenge, we present <span class="dnerf">Articulate-Anything</span>, a system that
+              automates the articulation of diverse, complex objects from different input modalities, including text,
+              images, and videos.
+              <span class="dnerf">Articulate-Anything</span> leverages Vision-Language Models (VLMs) to generate
+              Python
+              programs compilable into articulated Unified Robot Description Format (URDF) files. Our system consists
+              of
+              a mesh retrieval mechanism and
+              dual actor-critic closed-loop systems. The agentic system is capable of automatically generating
+              articulation, inspecting simulated predictions against ground-truths, and self-correcting errors.
+              Qualitative evaluations demonstrate <span class="dnerf">Articulate-Anything</span>'s capability to
+              articulate complex and even ambiguous object affordances by leveraging rich grounded inputs. In
+              extensive
+              quantitative experiments on the standard PartNet-Mobility dataset,
+              <span class="dnerf">Articulate-Anything</span> substantially outperforms prior work in automatic
+              articulation, increasing the success rate from 8.7% to 75%, setting a new bar for state-of-art
+              performance.
+            </p>
+          </div>
+        </div>
+      </div>
+      <!--/ Abstract. -->
+
+      <!-- Demo -->
+
+
+      <section class="section">
+        <div class="container is-max-widescreen">
+          <div class="rows">
+            <div class="rows is-centered">
+              <div class="row is-full-width">
+                <h2 class="title is-3"><span class="dvima"><span class="emoji">🌳</span> In-the-wild
+                    reconstructions</span></h2>
+                <p style="font-size: 125%">
+                  In this demo, we visualize the articulation results for in-the-wild videos. These videos were
+                  casually
+                  captured on an iPhone (e.g., titled angles) in cluttered environments, showing our ability to handle
+                  diverse, complex,
+                  and realistic object affordances.
+                </p>
+              </div>
+            </div>
+          </div>
+          <br>
+          <div class="demo-container">
+            <div class="demo-gallery">
+
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_lab_toilet.webp" width="30%"
+                style="border-radius: 5px;" alt='<b>Toilet</b>, articulate-anything:
+                        [sep]
+                        assets/articulation/lab_toilet/joint_pred.txt' onclick="populateDemo(this, 1);">
+
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_oven.webp" width="30%"
+                style="border-radius: 5px;" alt='<b>Oven</b>, articulate-anything:
+                        [sep]
+                        assets/articulation/oven/joint_pred.txt' onclick="populateDemo(this, 1);">
+
+
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_chair.webp" width="30%"
+                style="border-radius: 5px;" alt='<b>Chair</b>, articulate-anything:
+                        [sep]
+                        assets/articulation/chair/joint_pred.txt' onclick="populateDemo(this, 1);">
+
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_simple_drawer.webp" width="30%"
+                style="border-radius: 5px;" alt='<b>Drawer</b>, articulate-anything:
+                        [sep]
+                        assets/articulation/simple_drawer/joint_pred.txt' onclick="populateDemo(this, 1);">
+
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_suitcase.webp" width="30%"
+                style="border-radius: 5px;" alt='<b>Suitcase</b>, articulate-anything:
+                        [sep]
+                        assets/articulation/suitcase/joint_pred.txt' onclick="populateDemo(this, 1);">
+
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_window.webp" width="30%"
+                style="border-radius: 5px;" alt='<b>Window</b>, articulate-anything:
+                        [sep]
+                        assets/articulation/window/joint_pred.txt' onclick="populateDemo(this, 1);">
+
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_laptop.webp" width="30%"
+                style="border-radius: 5px;" alt='<b>Laptop</b>, articulate-anything:
+                        [sep]
+                        assets/articulation/laptop/joint_pred.txt' onclick="populateDemo(this, 1);">
+
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_monitor.webp" width="30%"
+                style="border-radius: 5px;" alt='<b>Display</b>, articulate-anything:
+                        [sep]
+                        assets/articulation/monitor/joint_pred.txt' onclick="populateDemo(this, 1);">
+
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_microwave.webp" width="30%"
+                style="border-radius: 5px;" alt='<b>Microwave</b>, articulate-anything:
+                        [sep]
+                        assets/articulation/microwave/joint_pred.txt' onclick="populateDemo(this, 1);">
+
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_box.webp" width="30%" style="border-radius: 5px;"
+                alt='<b>Box</b>, articulate-anything:
+                              [sep]
+                              assets/articulation/box/joint_pred.txt' onclick="populateDemo(this, 1);">
+
+
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_dishwasher.webp" width="30%"
+                style="border-radius: 5px;" alt='<b>Dishwasher</b>, articulate-anything:
+                        [sep]
+                        assets/articulation/dishwasher/joint_pred.txt' onclick="populateDemo(this, 1);">
+
+
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_fridge.webp" width="30%"
+                style="border-radius: 5px;" alt='<b>Fridge</b>, articulate-anything:
+                        [sep]
+                        assets/articulation/fridge/joint_pred.txt' onclick="populateDemo(this, 1);">
+
+
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_kitchen_pot.webp" width="30%"
+                style="border-radius: 5px;" alt='<b>Kitchen pot</b>, articulate-anything:
+                              [sep]
+                              assets/articulation/kitchen_pot/joint_pred.txt' onclick="populateDemo(this, 1);">
+
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_door.webp" width="30%"
+                style="border-radius: 5px;" alt='<b>Door</b>, articulate-anything:
+                                    [sep]
+                                    assets/articulation/door/joint_pred.txt' onclick="populateDemo(this, 1);">
+              <img src="datasets/in-the-wild-dataset/inputs/resize_aug_washing_machine.webp" width="30%"
+                style="border-radius: 5px;" alt='<b>Washing machine</b>, articulate-anything:
+                                                    [sep]
+                                                    assets/articulation/washing_machine/joint_pred.txt'
+                onclick="populateDemo(this, 1);">
+
+
+            </div>
+
+            <div class="demo-preview">
+              <video id="demo-video-1" autoplay loop muted webkit-playsinline playsinline
+                onclick="setAttribute('controls', 'true');">
+                <source id="expandedImg-1" src="videos/placeholder.mp4" type="video/mp4">
+                <!-- <video id="replay-video" controls preload playsinline width="75%"> -->
+              </video>
+              <div id="imgtext-1">Select a real-world video above:</div>
+              <div class="code-container">
+                <pre><code class="language-python" id="answer-1">Articulate-anything response shown within code block.</code></pre>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- New Robotics Application section -->
+      <section class="section">
+        <div class="container is-max-widescreen">
+          <div class="rows">
+            <div class="rows is-centered">
+              <div class="row is-full-width">
+                <h2 class="title is-3"><span class="dvima"><span class="emoji">🤖</span> Robotics Application</span>
+                </h2>
+                <p style="font-size: 125%">
+                  <!-- Content for Robotics Application will be added here -->
+                  TODO
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+
+      <!-- New Method section -->
+      <section class="section">
+        <div class="container is-max-widescreen">
+          <div class="rows">
+            <div class="rows is-centered">
+              <div class="row is-full-width">
+                <h2 class="title is-3"><span class="dvima"><span class="emoji">🧠</span> Method</span></h2>
+                <p style="font-size: 125%">
+                  <!-- Content for Method will be added here -->
+                  TODO
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+
+
+      <!-- Updated Quantitative Results section -->
+      <section class="section">
+        <div class="container is-max-widescreen">
+          <div class="rows">
+            <div class="rows is-centered">
+              <div class="row is-full-width">
+                <h2 class="title is-3"><span class="dvima"><span class="emoji">📊</span> Quantitative Results</span>
+                </h2>
+                <div class="image-grid"></div>
+
+                <p class="is-size-5">
+                  On the standard PartNet-Mobility dataset, <span class="dnerf">Articulate-Anything</span>
+                  <strong>substantially</strong> outperforms prior works in automatic articulation.
+
+                </p> <br />
+
+
+                <div class="image-item">
+                  <img src="assets/images/baselines.png" alt="Baseline Comparisons">
+                  <p class="image-caption">Figure 1: Joint prediction success rate compared to other baselines</p>
+                </div>
+
+
+                <p class="is-size-5">
+                  In an ablation experiment, we demonstrate <span class="dnerf">Articulate-Anything</span>'s ability
+                  to handle a diverse
+                  range of input modalities including texts, images, and videos. We found that richer and more
+                  grounded modalities such as videos
+                  enables higher articulation accuracy.
+                </p> <br />
+
+
+                <div class="image-item">
+                  <img src="assets/images/input_modality.png" alt="Input Modality Analysis">
+                  <p class="image-caption">Figure 2: Comparison of input modalities</p>
+                </div>
+
+                <p class="is-size-5">
+                  By leveraging a visual critic, <span class="dnerf">Articulate-Anything</span> can self-evaluate its
+                  predictions and self-improve over subsequent iterations.
+
+                </p><br />
+
+                <div class="image-item">
+                  <img src="assets/images/auto_improv.png" alt="Automatic Improvement">
+                  <p class="image-caption">Figure 3: Automatic improvement results</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+  </section>
+
+
+
+
+
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <h2 class="title">BibTeX</h2>
+      <pre><code>@article{articulate-anything2024,
+  <!-- author    = {Park, Keunhong and Sinha, Utkarsh and Barron, Jonathan T. and Bouaziz, Sofien and Goldman, Dan B and Seitz, Steven M. and Martin-Brualla, Ricardo},
+  title     = {Nerfies: Deformable Neural Radiance Fields},
+  journal   = {ICCV},
+  year      = {2021}, -->
+}</code></pre>
+    </div>
+  </section>
+
+
+  <footer class="footer">
+    <div class="container">
+      <div class="content has-text-centered">
+        <a class="icon-link" href="../papers/articulate-anything.pdf" class="external-link" disabled>
+          <i class="fas fa-file-pdf"></i>
+        </a>
+        <a class="icon-link" href="https://arxiv.org/abs/2312.09067" class="external-link" disabled>
+          <i class="ai ai-arxiv"></i>
+        </a>
+        <a class="icon-link" href="https://github.com/articulate-anything" class="external-link" disabled>
+          <i class="fab fa-github"></i>
+        </a>
+      </div>
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content" , style="text-align: center;">
+            <p>
+              This website was developed by referencing <a href="https://github.com/nerfies/nerfies.github.io">this</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+
+</body>
+
+
+
+<script>
+
+  timeoutIds = [];
+
+  function populateDemo(imgs, num) {
+    // Get the expanded image
+    var expandImg = document.getElementById("expandedImg-" + num);
+    // Get the image text
+    var imgText = document.getElementById("imgtext-" + num);
+    var answer = document.getElementById("answer-" + num);
+
+    // Use the same src in the expanded image as the image being clicked on from the grid
+    // expandImg.src = imgs.src.replace(".png", ".mp4");
+    expandImg.src = imgs.src.replace(".webp", ".mp4");
+    expandImg.src = expandImg.src.replace("resize_", "pred_");
+    expandImg.src = expandImg.src.replace("inputs", "outputs");
+    var video = document.getElementById('demo-video-' + num);
+    // or video = $('.video-selector')[0];
+    video.pause()
+    video.load();
+    video.play();
+    video.removeAttribute('controls');
+
+    console.log(expandImg.src);
+    // Use the value of the alt attribute of the clickable image as text inside the expanded image
+    var qa = imgs.alt.split("[sep]");
+    imgText.innerHTML = qa[0];
+    answer.innerHTML = "";
+    // Show the container element (hidden with CSS)
+    expandImg.parentElement.style.display = "block";
+    for (timeoutId of timeoutIds) {
+      clearTimeout(timeoutId);
+    }
+
+    // NOTE (wliang): Modified from original to read from file instead
+    fetch(qa[1])
+      .then(response => response.text())
+      .then(contents => {
+        // Call the processData function and pass the contents as an argument
+        typeWriter(contents, 0, qa[0], num);
+      })
+      .catch(error => console.error('Error reading file:', error));
+  }
+
+  function typeWriter(txt, i, q, num) {
+    var imgText = document.getElementById("imgtext-" + num);
+    var answer = document.getElementById("answer-" + num);
+    if (imgText.innerHTML == q) {
+      for (let k = 0; k < 5; k++) {
+        if (i < txt.length) {
+          if (txt.charAt(i) == "\\") {
+            answer.innerHTML += "\n";
+            i += 1;
+          } else {
+            answer.innerHTML += txt.charAt(i);
+          }
+          i++;
+        }
+      }
+      hljs.highlightAll();
+      timeoutIds.push(setTimeout(typeWriter, 1, txt, i, q, num));
+    }
+  }
+
+</script>
+
+
+</html>

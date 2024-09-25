@@ -1,0 +1,37 @@
+from articulate_anything.api.odio_urdf import *
+
+def partnet_10383(input_dir, links) -> Robot:
+    pred_robot = Robot(input_dir=input_dir)
+    pred_robot.add_link(links["base"])
+    pred_robot.add_link(links["laptop_base"])
+    pred_robot.add_joint(
+        Joint(
+            "base_to_laptop_base",
+            Parent("base"),
+            Child("laptop_base"),
+            type="fixed",
+        )
+    )
+    pred_robot.add_link(links["screen"])
+    pred_robot.place_relative_to(
+        "screen", "laptop_base", placement="above", clearance=0.0
+    )
+    # ====================JOINT PREDICTION====================
+    # The screen is hinged at the bottom and opens up and down.
+    # The axis of motion is along the y-axis.
+    screen_bb = pred_robot.get_bounding_boxes(
+        ["screen"], include_dim=False)["screen"]
+    screen_vertices = compute_aabb_vertices(*screen_bb)
+    pivot_point = screen_vertices[2]  # Front-Left-Bottom (FLB)
+    # laptop is special case where we attach the screen at Front instead of Back
+    # This is because the default mesh of the laptop is standing up slightly tilted backward
+    # so the front part is attached to the base
+    pred_robot.make_revolute_joint(
+        "screen",
+        "laptop_base",
+        global_axis=[0, 1, 0],
+        lower_angle_deg=0,
+        upper_angle_deg=135,  # open up
+        pivot_point=pivot_point,
+    )
+    return pred_robot

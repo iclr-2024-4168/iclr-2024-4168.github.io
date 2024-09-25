@@ -1,0 +1,34 @@
+from articulate_anything.api.odio_urdf import *
+
+
+def partnet_8936(input_dir, links) -> Robot:
+    pred_robot = Robot(input_dir=input_dir, name="door")
+    pred_robot.add_link(links['base'])
+    pred_robot.add_link(links['door_frame'])
+    pred_robot.add_joint(Joint("base_to_door_frame",
+                         Parent("base"),
+                         Child("door_frame"),
+                         type="fixed"),
+                         )
+    pred_robot.add_link(links['door_knob'])
+    pred_robot.place_relative_to('door_knob', 'door_frame',
+                                 placement="front",
+                                 clearance=0.0)
+    # ====================JOINT PREDICTION====================
+    # The door is hinged at the left side and opens inward.
+    # The axis of motion is along the z-axis.
+    door_bb = pred_robot.get_bounding_boxes(
+        ["door_frame"], include_dim=False)["door_frame"]
+    door_vertices = compute_aabb_vertices(*door_bb)
+    pivot_point = door_vertices[0]  # Back-Left-Bottom (BLB)
+    # the door is opening inward. The pivot is on the left side.
+    # so the axis needs to be negative
+    pred_robot.make_revolute_joint(
+        "door_frame",
+        "base",
+        global_axis=[0, 0, -1],
+        lower_angle_deg=0,
+        upper_angle_deg=90,
+        pivot_point=pivot_point,
+    )
+    return pred_robot

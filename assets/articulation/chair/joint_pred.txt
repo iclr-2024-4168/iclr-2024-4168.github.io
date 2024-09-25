@@ -1,0 +1,137 @@
+from articulate_anything.odio.odio_urdf import *
+
+
+def partnet_36912(intput_dir, links):
+    """
+    No. masked_links: 19
+    Robot Link Summary:
+    - base
+    - caster
+    - wheel
+    - wheel_2
+    - caster_2
+    - wheel_3
+    - wheel_4
+    - caster_3
+    - wheel_5
+    - wheel_6
+    - caster_4
+    - wheel_7
+    - wheel_8
+    - caster_5
+    - wheel_9
+    - wheel_10
+    - seat
+    - chair_leg
+    - lever
+
+
+    """
+    pred_robot = Robot(input_dir=intput_dir, name="office_chair")
+    pred_robot.add_link(links['base'])
+    pred_robot.add_link(links['seat'])
+    pred_robot.add_joint(Joint("base_to_seat",
+                         Parent("base"),
+                         Child("seat"),
+                         type="fixed"),
+                         )
+
+    # =============================================
+    # partnet mobility peculiarity: need to always call this function
+    # after the first joint to orientate the robot correctly
+    pred_robot.align_robot_orientation()
+    # =============================================
+    pred_robot.add_link(links['chair_leg'])
+    pred_robot.place_relative_to('chair_leg', 'seat',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['lever'])
+    pred_robot.place_relative_to('lever', 'seat',
+                                 placement="right",
+                                 clearance=0.0)
+    pred_robot.add_link(links['caster'])
+    pred_robot.place_relative_to('caster', 'chair_leg',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['wheel'])
+    pred_robot.place_relative_to('wheel', 'caster',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['caster_2'])
+    pred_robot.place_relative_to('caster_2', 'chair_leg',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['wheel_2'])
+    pred_robot.place_relative_to('wheel_2', 'caster_2',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['caster_3'])
+    pred_robot.place_relative_to('caster_3', 'chair_leg',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['wheel_3'])
+    pred_robot.place_relative_to('wheel_3', 'caster_3',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['wheel_4'])
+    pred_robot.place_relative_to('wheel_4', 'caster_3',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['caster_4'])
+    pred_robot.place_relative_to('caster_4', 'chair_leg',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['wheel_5'])
+    pred_robot.place_relative_to('wheel_5', 'caster_4',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['wheel_6'])
+    pred_robot.place_relative_to('wheel_6', 'caster_4',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['caster_5'])
+    pred_robot.place_relative_to('caster_5', 'chair_leg',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['wheel_7'])
+    pred_robot.place_relative_to('wheel_7', 'caster_5',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['wheel_8'])
+    pred_robot.place_relative_to('wheel_8', 'caster_5',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['wheel_9'])
+    pred_robot.place_relative_to('wheel_9', 'caster_5',
+                                 placement="below",
+                                 clearance=0.0)
+    pred_robot.add_link(links['wheel_10'])
+    pred_robot.place_relative_to('wheel_10', 'caster_5',
+                                 placement="below",
+                                 clearance=0.0)
+    # ====================JOINT PREDICTION====================
+    # -- Groundtruth video analysis --
+    # joint_type: 'revolute', the seat rotates along the z-axis
+    # joint_axis: the seat rotates along the z-axis
+    # joint_origin: the seat is attached to the chair_leg at the bottom of the seat.
+    # the pivot point needs to be either Back-Left-Bottom (BLB) or Back-Right-Bottom (BRB)
+    # joint_limit: the seat rotates 360 degrees
+
+    seat_bb = pred_robot.get_bounding_boxes(
+        ["seat"], include_dim=False)["seat"]
+    seat_vertices = compute_aabb_vertices(*seat_bb)
+    pivot_point = seat_vertices[0]  # Back-Left-Bottom (BLB)
+
+    pred_robot.make_revolute_joint(
+        "seat",
+        "chair_leg",
+        global_axis=[
+            0,
+            0,
+            1,
+        ],  # The seat rotates along the z-axis
+        lower_angle_deg=0,
+        upper_angle_deg=90,  # rotate 360 degrees
+        pivot_point=pivot_point,
+    )
+    return pred_robot

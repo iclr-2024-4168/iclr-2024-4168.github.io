@@ -1,0 +1,68 @@
+from articulate_anything.api.odio_urdf import *
+
+
+def partnet_100194(input_dir, links):
+    """
+    No. masked_links: 8
+    Robot Link Summary:
+    - base
+    - lid
+    - lid_2
+    - lid_3
+    - lid_4
+    - lid_5
+    - lid_6
+    - box_body
+
+    Object: a box with a lid
+    Targetted affordance: lid
+    """
+    pred_robot = Robot(input_dir=input_dir, name="box")
+    pred_robot.add_link(links['base'])
+    pred_robot.add_link(links['box_body'])
+    pred_robot.add_joint(Joint("base_to_box_body",
+                         Parent("base"),
+                         Child("box_body"),
+                         type="fixed"),
+                         )
+
+    pred_robot.add_link(links['lid'])
+    pred_robot.place_relative_to('lid', 'box_body',
+                                 placement="above",
+                                 clearance=0.0)
+    pred_robot.add_link(links['lid_2'])
+    pred_robot.place_relative_to('lid_2', 'box_body',
+                                 placement="above",
+                                 clearance=0.0)
+    pred_robot.add_link(links['lid_3'])
+    pred_robot.place_relative_to('lid_3', 'box_body',
+                                 placement="above",
+                                 clearance=0.0)
+    pred_robot.add_link(links['lid_4'])
+    pred_robot.place_relative_to('lid_4', 'box_body',
+                                 placement="above",
+                                 clearance=0.0)
+    pred_robot.add_link(links['lid_5'])
+    pred_robot.place_relative_to('lid_5', 'box_body',
+                                 placement="above",
+                                 clearance=0.0)
+    pred_robot.add_link(links['lid_6'])
+    pred_robot.place_relative_to('lid_6', 'box_body',
+                                 placement="above",
+                                 clearance=0.0)
+    # ====================JOINT PREDICTION====================
+    # The lid is hinged at the back and opens upward.
+    # The axis of motion is along the y-axis.
+    lid_bb = pred_robot.get_bounding_boxes(
+        ["lid"], include_dim=False)["lid"]
+    lid_vertices = compute_aabb_vertices(*lid_bb)
+    pivot_point = lid_vertices[0]  # Back-Left-Bottom (BLB)
+    pred_robot.make_revolute_joint(
+        "lid",
+        "box_body",
+        global_axis=[0, -1, 0],
+        lower_angle_deg=0,
+        upper_angle_deg=90,
+        pivot_point=pivot_point,
+    )
+    return pred_robot

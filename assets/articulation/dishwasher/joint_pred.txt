@@ -1,0 +1,54 @@
+from articulate_anything.api.odio_urdf import *
+
+
+def partnet_12583(input_dir, links) -> Robot:
+    """
+    No. masked_links: 3
+    Robot Link Summary:
+    - base
+    - dishwasher_body
+    - door
+
+    Object: A dishwasher with a door
+    Targetted affordance: "door"
+    """
+    pred_robot = Robot(input_dir=input_dir, name="dishwasher")
+    pred_robot.add_link(links['base'])
+    pred_robot.add_link(links['dishwasher_body'])
+    pred_robot.add_joint(Joint("base_to_dishwasher_body",
+                         Parent("base"),
+                         Child("dishwasher_body"),
+                         type="fixed"),
+                         )
+
+    # door goes in front of the dishwasher_body.
+    pred_robot.add_link(links['door'])
+    pred_robot.place_relative_to('door', 'dishwasher_body',
+                                 placement="front",
+                                 clearance=0.0)
+    # ====================JOINT PREDICTION====================
+    # -- Groundtruth video analysis --
+    # in the groundtruth video, the door opens up while its bottom part still
+    # attached to the body so the pivot point needs to be Back-Left-Bottom (BLB)
+    # or Back-Right-Bottom (BRB)
+    door_bb = pred_robot.get_bounding_boxes(
+        ['door'], include_dim=False)['door']
+    door_vertices = compute_aabb_vertices(*door_bb)
+    pivot_point = door_vertices[0]  # Back-Left-Bottom (BLB)
+
+    pred_robot.make_revolute_joint(
+        "door",
+        "dishwasher_body",
+        global_axis=[
+            0,
+            # pivot-axis relationship:
+            # since the pivot is at the bottom and we want to open outward, set
+            # axis to positive
+            1,
+            0,
+        ],  # The door opens by opening up down: i.e., rotating along the left-right axis, which is y-axis
+        lower_angle_deg=0,
+        upper_angle_deg=90,  # open outward
+        pivot_point=pivot_point,
+    )
+    return pred_robot

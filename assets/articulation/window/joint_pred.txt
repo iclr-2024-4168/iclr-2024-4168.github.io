@@ -1,0 +1,61 @@
+from articulate_anything.odio.odio_urdf import *
+
+
+def partnet_102803(intput_dir, links):
+    """
+    No. masked_links: 4
+    Robot Link Summary:
+    - base
+    - window
+    - window_2
+    - window_frame
+
+    Object: a window
+    Targetted affordance: "window"
+    """
+    pred_robot = Robot(input_dir=intput_dir, name="window")
+    pred_robot.add_link(links["base"])
+    pred_robot.add_link(links["window_frame"])
+    pred_robot.add_joint(
+        Joint(
+            "base_to_window_frame",
+            Parent("base"),
+            Child("window_frame"),
+            type="fixed",
+        ),
+    )
+
+    # =============================================
+    # partnet mobility peculiarity: need to always call this function
+    # after the first joint to orientate the robot correctly
+    pred_robot.align_robot_orientation()
+    # =============================================
+
+    pred_robot.add_link(links["window"])
+    pred_robot.place_relative_to(
+        "window", "window_frame", placement="inside", clearance=0.0
+    )
+
+    pred_robot.add_link(links["window_2"])
+    pred_robot.place_relative_to(
+        "window_2", "window_frame", placement="inside", clearance=0.0
+    )
+    # ====================JOINT PREDICTION====================
+    # -- Groundtruth video analysis --
+    # in the groundtruth video, the window opens up while its bottom part still
+    # attached to the frame so the pivot point needs to be Front-Left-Bottom (FLB)
+    # or Front-Right-Bottom (FRB)
+    lower_point = [0, 0, 0]
+    window_bb = pred_robot.get_bounding_boxes(["window"], include_dim=True)[
+        "window"
+    ]
+    window_dim = window_bb[1]
+    upper_point = [0, 0, window_dim["height"]]
+
+    pred_robot.make_prismatic_joint(
+        "window",
+        "window_frame",
+        lower_point,
+        upper_point,
+    )
+    return pred_robot

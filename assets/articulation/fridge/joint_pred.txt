@@ -1,0 +1,61 @@
+from articulate_anything.api.odio_urdf import *
+
+
+def partnet_10900(input_dir, links) -> Robot:
+    """
+    No. masked_links: 4
+    Robot Link Summary:
+    - base
+    - door
+    - door_2
+    - refrigerator_body
+    Object: a refrigerator with two doors
+    Targetted affordance: "door"
+    """
+    pred_robot = Robot(input_dir=input_dir, name="refrigerator")
+    pred_robot.add_link(links['base'])
+    pred_robot.add_link(links['refrigerator_body'])
+    pred_robot.add_joint(Joint("base_to_refrigerator_body",
+                         Parent("base"),
+                         Child("refrigerator_body"),
+                         type="fixed"),
+                         )
+
+    pred_robot.add_link(links['door'])
+    pred_robot.place_relative_to('door', 'refrigerator_body',
+                                 placement="front",
+                                 clearance=0.0)
+
+    pred_robot.add_link(links['door_2'])
+    pred_robot.place_relative_to('door_2', 'refrigerator_body',
+                                 placement="front",
+                                 clearance=0.0)
+    # ====================JOINT PREDICTION====================
+    # -- Groundtruth video analysis --
+    # in the groundtruth video, the left door opens up while its right part still
+    # attached to the body so the pivot point needs to be Back-Right-Bottom (BRB)
+    # or Back-Right-Top (BRT)
+    target_door_link = "door"
+    door_bb = pred_robot.get_bounding_boxes([target_door_link], include_dim=False)[
+        target_door_link
+    ]
+    door_vertices = compute_aabb_vertices(*door_bb)
+    pivot_point = door_vertices[1]  # Back-Right-Bottom (BRB)
+
+    pred_robot.make_revolute_joint(
+        target_door_link,
+        "refrigerator_body",
+        global_axis=[
+            0,
+            0,
+            # pivot-axis relationship:
+            # since the pivot is on the right and we want to open outward, set
+            # axis to positive
+            1,  # opening up
+        ],  # The refrigerator door swings open and closed around the vertical axis,
+        # which is the z-axis.
+        lower_angle_deg=0,
+        upper_angle_deg=90,  # open outward
+        pivot_point=pivot_point,
+    )
+    return pred_robot

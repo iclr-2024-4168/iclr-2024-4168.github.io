@@ -1,0 +1,44 @@
+from articulate_anything.api.odio_urdf import *
+
+
+def partnet_100051(input_dir, links) -> Robot:
+    pred_robot = Robot(input_dir=input_dir, name="pot")
+    pred_robot.add_link(links["base"])
+    pred_robot.add_link(links["pot_body"])
+    pred_robot.add_joint(
+        Joint(
+            "base_to_pot_body",
+            Parent("base"),
+            Child("pot_body"),
+            type="fixed",
+        )
+    )
+    pred_robot.add_link(links["lid"])
+    pred_robot.place_relative_to(
+        "lid", "pot_body", placement="above", clearance=0.0
+    )
+    # ====================JOINT PREDICTION====================
+    # -- Groundtruth video analysis --
+    # in the groundtruth video, the lid opens up while its back parts still attached
+    # to the body so the pivot point needs to be Back-Left-Bottom (BLB) or Back-Right-Bottom (BRB)
+    lid_bb = pred_robot.get_bounding_boxes(["lid"], include_dim=False)["lid"]
+    lid_vertices = compute_aabb_vertices(*lid_bb)
+    pivot_point = lid_vertices[0]  # Back-Left-Bottom (BLB)
+    pred_robot.make_revolute_joint(
+        "lid",
+        "pot_body",
+        global_axis=[
+            0,
+            # pivot-axis relationship:
+            # since the pivot is on the back and we want to open upward, set
+            # axis to negative
+            -1,
+            0,
+        ],  # it rotates along the left-right axis,
+        # which is the y-axis
+        lower_angle_deg=0,
+        upper_angle_deg=90,  # NOTE: might need to tune this by visual feedback
+        pivot_point=pivot_point,
+    )
+
+    return pred_robot
