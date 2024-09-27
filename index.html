@@ -387,9 +387,9 @@
             <p>
               Interactive 3D simulated objects are crucial in AR/VR, animations, and robotics, serving as the
               foundational elements that drive immersive experiences and advanced automation.
-              However, articulating these objects requires extensive human effort and expertise, limiting their
-              broader
-              applications.
+              However, creating these interactable objects (i.e., articulation) requires extensive human effort and
+              expertise,
+              limiting their broader applications.
               To overcome this challenge, we present <span class="dnerf">Articulate-Anything</span>, a system that
               automates the articulation of diverse, complex objects from different input modalities, including text,
               images, and videos.
@@ -405,8 +405,9 @@
               extensive
               quantitative experiments on the standard PartNet-Mobility dataset,
               <span class="dnerf">Articulate-Anything</span> substantially outperforms prior work in automatic
-              articulation, increasing the success rate from 8.7% to 75%, setting a new bar for state-of-art
-              performance.
+              articulation, increasing the success rate from 8.7-11.6% to 75%, setting a new bar for state-of-art
+              performance. Lastly, to showcase an application, we train multiple robotic policies using generated
+              assets, demonstrating the utility of articulation for finer-grained manipulation beyond pick and place.
             </p>
           </div>
         </div>
@@ -497,6 +498,10 @@
                 <source src="videos/articulate_anything_method_V1.mp4" type="video/mp4">
               </video>
             </div>
+            <p class="caption">
+              See a walk-through of Articulate-Anything's system with AI voice from <a target="_blank"
+                rel="noopener noreferrer" href="https://neets.ai/">neets.ai</a>.
+            </p>
 
           </div>
         </div>
@@ -713,8 +718,16 @@
             <div class="image-grid"></div>
 
             <p class="is-size-5">
-              On the standard PartNet-Mobility dataset, <span class="dnerf">Articulate-Anything</span>
-              <strong>substantially</strong> outperforms prior works in automatic articulation, setting a new bar in
+              Prior works such as URDFormer and Real2code rely on impoverished inputs such as cropped images or text
+              bounding box coordinates. Impoverished inputs also mean that their articulation had to be done on an open
+              loop.
+
+              <br>
+
+              On the standard PartNet-Mobility dataset, <span class="dnerf">Articulate-Anything</span>, leveraging
+              grounded video inputs and closed-loop actor-critic system,
+              <strong>substantially</strong> outperforms these prior works in automatic articulation, setting a new bar
+              in
               state-of-the-art
               performance.
 
@@ -723,33 +736,35 @@
 
             <div class="image-item">
               <img src="assets/images/baselines.png" alt="Baseline Comparisons">
-              <p class="image-caption">Figure 1: Joint prediction success rate compared to other baselines</p>
+              <p class="image-caption">Articulate-anything has subsantially higher joint prediction success rate
+                compared to other baselines.</p>
             </div>
 
 
             <p class="is-size-5">
-              In an ablation experiment, we demonstrate <span class="dnerf">Articulate-Anything</span>'s ability
-              to handle a diverse
-              range of input modalities including texts, images, and videos. We also found that richer and more
+              In an ablation experiment, we found that indeed richer and more
               grounded modalities such as videos
-              enables higher articulation accuracy.
+              enables higher articulation accuracy in our own system.
             </p> <br />
 
 
             <div class="image-item">
               <img src="assets/images/input_modality.png" alt="Input Modality Analysis">
-              <p class="image-caption">Figure 2: Comparison of input modalities</p>
+              <p class="image-caption">More grounded visual inputs such as images or videos improve accuracies in all
+                articulation tasks.</p>
             </div>
 
             <p class="is-size-5">
-              By leveraging a visual critic, <span class="dnerf">Articulate-Anything</span> can self-evaluate its
+              Finally, by leveraging a visual critic, <span class="dnerf">Articulate-Anything</span> can self-evaluate
+              its
               predictions and self-improve over subsequent iterations.
 
             </p><br />
 
             <div class="image-item">
               <img src="assets/images/auto_improv.png" alt="Automatic Improvement">
-              <p class="image-caption">Figure 3: Automatic improvement results</p>
+              <p class="image-caption">Articulate-anything can automatically refine and improve its predictions over
+                subsequent iterations.</p>
             </div>
           </div>
         </div>
